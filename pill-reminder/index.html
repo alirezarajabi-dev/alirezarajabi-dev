@@ -185,6 +185,10 @@ label.switch input { width: 32px; height: 32px; }
       <button class="chip" data-quick="840">۲ ظهر</button>
       <button class="chip" data-quick="1260">۹ شب</button>
     </div>
+    <h2>۳. اسم قرص با صدای شما</h2>
+    <div class="panel" id="pillVoice" data-voice="">
+      <div class="muted small">مثلاً: «قرص فشار، همون قرص سفید کوچیک.» سر ساعت، بعد از پیام اول شما پخش می‌شود.</div>
+    </div>
     <div style="margin-top:28px"><button class="btn" id="savePill">ذخیره</button></div>
     <div style="text-align:center;margin-top:8px"><button class="link danger" id="deletePill">پاک کردن این قرص</button></div>
   </section>
@@ -248,7 +252,7 @@ async function loadVoice(k) {
   if (!blob || !ctx) return;
   try { buffers[k] = await ctx.decodeAudioData(await blob.arrayBuffer()); } catch (e) { buffers[k] = null; }
 }
-function stopSound() { if (playing) { try { playing.stop(); } catch (e) {} playing = null; } }
+function stopSound() { const s = playing; playing = null; if (s) { try { s.stop(); } catch (e) {} } }
 function chime() {
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -260,6 +264,24 @@ function chime() {
     osc.connect(g).connect(ctx.destination); osc.start(t + o); osc.stop(t + o + 0.42);
   });
 }
+/* Plays the voices one after another: the reminder, then the pill's own name. */
+function playSeq(keys) {
+  stopSound();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume();
+  const list = keys.filter((k) => buffers[k]);
+  if (!list.length) { chime(); return; }
+  let i = 0;
+  const next = () => {
+    if (i >= list.length) { playing = null; return; }
+    const src = ctx.createBufferSource();
+    src.buffer = buffers[list[i++]]; src.connect(ctx.destination);
+    src.onended = () => { if (playing === src) next(); };
+    src.start(); playing = src;
+  };
+  next();
+}
+const pillKey = (p) => "pill-" + p.id;
 function play(k) {
   stopSound();
   if (!ctx) return;
@@ -341,9 +363,9 @@ function openAlarm(p, day) {
   $("#alarmName").textContent = p.name;
   $("#alarmTime").textContent = "ساعت " + timeLabel(p.min);
   $("#alarm").classList.add("on");
-  play("due");
+  playSeq(["due", pillKey(p)]);
   clearInterval(repeatTimer);
-  repeatTimer = setInterval(() => play("due"), 2 * 60 * 1000); // repeat every 2 minutes
+  repeatTimer = setInterval(() => playSeq(["due", pillKey(p)]), 2 * 60 * 1000); // repeat every 2 minutes
   notify(p);
 }
 function closeAlarm() { clearInterval(repeatTimer); $("#alarm").classList.remove("on"); alarmPill = null; }
@@ -355,7 +377,7 @@ function taken_(p, day) {
   renderHome();
 }
 $("#alarmTaken").onclick = () => alarmPill && taken_(alarmPill, alarmDay);
-$("#alarmReplay").onclick = () => play("due");
+$("#alarmReplay").onclick = () => alarmPill && playSeq(["due", pillKey(alarmPill)]);
 $("#alarmLater").onclick = () => {
   if (!alarmPill) return;
   snoozed[alarmPill.id] = Date.now() + 10 * 60 * 1000;
@@ -462,7 +484,7 @@ async function startRecording(k, panel) {
 }
 
 /* Add / edit pill */
-let editing = null, editMin = 480;
+let editing = null, editMin = 480, editId = 0;
 function showTime() {
   $("#pillTime").textContent = timeLabel(editMin);
   $("#pillClock").textContent = clock(Math.floor(editMin / 60), editMin % 60);
@@ -472,6 +494,8 @@ function openEdit(p) {
   $("#editTitle").textContent = p ? "تغییر قرص" : "قرص تازه";
   $("#pillName").value = p ? p.name : "";
   editMin = p ? p.min : 480;
+  editId = p ? p.id : Date.now();
+  const vp = $("#pillVoice"); vp.dataset.voice = "pill-" + editId; renderVoice(vp);
   $("#deletePill").style.display = p ? "" : "none";
   showTime(); go("edit");
 }
@@ -484,11 +508,12 @@ $("#savePill").onclick = () => {
   const name = $("#pillName").value.trim();
   if (!name) { toast("لطفاً اسم قرص را بنویسید", "var(--danger)"); return; }
   if (editing) { editing.name = name; editing.min = editMin; }
-  else data.pills.push({ id: Date.now(), name, min: editMin });
+  else data.pills.push({ id: editId, name, min: editMin });
   sortPills(); save(); go("settings");
 };
 $("#deletePill").onclick = () => {
   if (!editing || !confirm("قرص «" + editing.name + "» پاک شود؟")) return;
+  voiceSet(pillKey(editing), null); delete buffers[pillKey(editing)];
   data.pills = data.pills.filter((x) => x !== editing); save(); go("settings");
 };
 
@@ -520,7 +545,7 @@ $("#startBtn").onclick = async () => {
   await ensureAudio();
   // A silent blip unlocks sound on iPhone for the rest of the visit.
   const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start();
-  await Promise.all([loadVoice("due"), loadVoice("done")]);
+  await Promise.all(["due", "done", ...data.pills.map(pillKey)].map(loadVoice));
   $("#start").classList.remove("on");
   try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
   applyWake(); renderHome(); check();
