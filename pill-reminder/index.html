@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>یادآور قرص</title>
+<meta name="theme-color" content="#0B6E69">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="یادآور قرص">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+@font-face { font-family: Vazirmatn; src: url(fonts/Vazirmatn-Regular.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: Vazirmatn; src: url(fonts/Vazirmatn-Bold.woff2) format("woff2"); font-weight: 700; font-display: swap; }
+:root {
+  --bg: #FFF8EC; --ink: #1B1B1B; --muted: #55524B; --card: #fff;
+  --primary: #0B6E69; --taken: #1E7B34; --due: #C25100; --danger: #B3261E; --alert: #FFD54F;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font-family: Vazirmatn, Tahoma, sans-serif; font-size: 24px; line-height: 1.5;
+  -webkit-text-size-adjust: 100%; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+main { max-width: 560px; margin: 0 auto; padding: 24px 16px 40px; }
+h1 { font-size: 36px; margin: 0; }
+h2 { font-size: 26px; margin: 28px 0 10px; }
+.muted { color: var(--muted); }
+.small { font-size: 18px; }
+button { font-family: inherit; cursor: pointer; border: 0; -webkit-tap-highlight-color: transparent; }
+.btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+  min-height: 72px; border-radius: 20px; font-size: 26px; font-weight: 700; padding: 8px 16px;
+  background: var(--primary); color: #fff; }
+.btn.green { background: var(--taken); }
+.btn.red { background: var(--danger); }
+.btn.outline { background: #fff; color: var(--ink); border: 2px solid var(--ink); min-height: 64px; font-size: 22px; }
+.btn:disabled { opacity: .4; }
+.link { background: none; color: var(--primary); font-size: 20px; padding: 10px 4px; }
+.link.danger { color: var(--danger); }
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; }
+.card { background: var(--card); border: 2px solid var(--muted); border-radius: 24px; padding: 18px; margin-bottom: 16px; }
+.card.due { border: 4px solid var(--due); }
+.card.taken { border-color: var(--taken); }
+.card .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.card .name { font-size: 34px; font-weight: 700; }
+.card .time { font-size: 26px; font-weight: 700; white-space: nowrap; }
+.status { font-size: 24px; font-weight: 700; margin: 4px 0 10px; }
+input[type=text] { width: 100%; font-family: inherit; font-size: 28px; font-weight: 700; padding: 16px;
+  border: 2px solid var(--muted); border-radius: 16px; background: #fff; color: var(--ink); }
+.timebox { background: #fff; border: 2px solid var(--primary); border-radius: 20px; padding: 16px; text-align: center; }
+.timebox .big { font-size: 46px; font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 12px; }
+.chip { background: #fff; border: 2px solid #c9c4b8; border-radius: 14px; font-size: 21px; padding: 8px 16px; color: var(--ink); }
+.panel { background: #fff; border-radius: 20px; padding: 16px; display: grid; gap: 12px; }
+.ok { color: var(--taken); font-weight: 700; }
+.rec { color: var(--danger); font-weight: 700; text-align: center; }
+.hold { display: block; margin: 36px auto 0; background: none; color: var(--muted); font-size: 17px; padding: 16px;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.screen { display: none; }
+.screen.on { display: block; }
+.overlay { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column; overflow: auto;
+  padding: calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom)); }
+.overlay.on { display: flex; }
+.overlay > .inner { max-width: 560px; width: 100%; margin: 0 auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+#alarm { background: var(--alert); }
+#alarm .who { font-size: 30px; font-weight: 700; text-align: center; }
+#alarm .title { font-size: 36px; font-weight: 700; text-align: center; }
+#alarm .pillbox { background: #fff; border: 3px solid var(--ink); border-radius: 24px; padding: 18px; text-align: center; }
+#alarm .pillname { font-size: 52px; font-weight: 700; line-height: 1.3; }
+#alarm .spacer { flex: 1; }
+#alarm .btn.green { min-height: 110px; font-size: 38px; }
+#start { background: var(--bg); justify-content: center; text-align: center; }
+#start .icon { font-size: 90px; }
+.toast { position: fixed; left: 16px; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 20;
+  background: var(--taken); color: #fff; font-size: 26px; font-weight: 700; text-align: center;
+  padding: 18px; border-radius: 18px; max-width: 528px; margin: 0 auto; display: none; }
+.toast.on { display: block; }
+.back { background: none; font-size: 22px; color: var(--primary); padding: 8px 0; margin-bottom: 8px; }
+label.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 22px; }
+label.switch input { width: 32px; height: 32px; }
+</style>
+</head>
+<body>
+
+<!-- Tap-to-start: browsers only allow sound after a tap, so every visit begins here. -->
+<div id="start" class="overlay on">
+  <div class="inner" style="justify-content:center">
+    <div class="icon">💊</div>
+    <h1 id="startHello">سلام</h1>
+    <p class="muted">برای روشن شدن یادآور، دکمه را بزنید.</p>
+    <button class="btn green" id="startBtn">شروع</button>
+  </div>
+</div>
+
+<!-- Reminder at dose time -->
+<div id="alarm" class="overlay" role="alertdialog" aria-labelledby="alarmName">
+  <div class="inner">
+    <div style="text-align:center;font-size:80px">💊</div>
+    <div class="who" id="alarmWho"></div>
+    <div class="title">موقع خوردن قرص است</div>
+    <div class="pillbox">
+      <div class="pillname" id="alarmName"></div>
+      <div style="font-size:26px;font-weight:700" id="alarmTime"></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn outline" id="alarmReplay">🔊 دوباره گوش بده</button>
+    <button class="btn green" id="alarmTaken">✓ خوردم</button>
+    <button class="btn outline" id="alarmLater">بعداً یادم بنداز (۱۰ دقیقه)</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<main>
+  <!-- Home: what the parent sees every day -->
+  <section id="home" class="screen on">
+    <h1 id="hello">سلام</h1>
+    <div class="muted" id="today"></div>
+    <div id="list" style="margin-top:20px"></div>
+    <button class="hold" id="hold">تنظیمات (برای فرزند: انگشت را نگه دارید)</button>
+  </section>
+
+  <!-- Settings: for the son or daughter -->
+  <section id="settings" class="screen">
+    <button class="back" data-go="home">→ بازگشت</button>
+    <h1>تنظیمات</h1>
+
+    <h2>پدر یا مادر را چه صدا می‌زنید؟</h2>
+    <input type="text" id="title" placeholder="مثلاً: مادر جان" style="font-weight:400">
+    <div class="chips" style="justify-content:flex-start">
+      <button class="chip" data-title="مادر جان">مادر جان</button>
+      <button class="chip" data-title="بابا جان">بابا جان</button>
+      <button class="chip" data-title="مامان">مامان</button>
+      <button class="chip" data-title="بابا">بابا</button>
+    </div>
+
+    <h2>۱. صدای شما سر ساعت قرص</h2>
+    <div class="panel" data-voice="due">
+      <div class="muted small">مثلاً: «سلام مادر جان، موقع قرصتونه، مراقب خودتون باشید و یادتون نره.»</div>
+    </div>
+
+    <h2>۲. صدای شما بعد از زدن «خوردم»</h2>
+    <div class="panel" data-voice="done">
+      <div class="muted small">مثلاً: «خب، قرصتو خوردی، ایشالله به سلامتی.»</div>
+    </div>
+
+    <h2>قرص‌ها</h2>
+    <div id="pillAdmin"></div>
+    <button class="btn" id="addPill">+ افزودن قرص</button>
+
+    <h2>روشن ماندن صفحه</h2>
+    <div class="panel">
+      <label class="switch">صفحهٔ گوشی خاموش نشود
+        <input type="checkbox" id="keepAwake">
+      </label>
+      <div class="muted small">یادآوری فقط وقتی کار می‌کند که این صفحه باز باشد. اگر گوشی را
+        روی شارژ می‌گذارید، این گزینه را روشن کنید.</div>
+    </div>
+
+    <h2>امتحان</h2>
+    <button class="btn outline" id="testAlarm">نمایش یک یادآوری آزمایشی</button>
+    <p class="muted small">در آیفون، کلید بی‌صدا (کنار گوشی) را خاموش کنید و صدا را زیاد کنید.</p>
+  </section>
+
+  <!-- Add / edit a pill -->
+  <section id="edit" class="screen">
+    <button class="back" data-go="settings">→ بازگشت</button>
+    <h1 id="editTitle">قرص تازه</h1>
+    <h2>۱. اسم قرص</h2>
+    <input type="text" id="pillName" placeholder="مثلاً: قرص فشار" autocomplete="off">
+    <h2>۲. ساعت خوردن</h2>
+    <div class="timebox">
+      <div class="big" id="pillTime"></div>
+      <div class="muted small" id="pillClock"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn outline" data-step="60">+ ۱ ساعت</button>
+        <button class="btn outline" data-step="15">+ ۱۵ دقیقه</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn outline" data-step="-60">− ۱ ساعت</button>
+        <button class="btn outline" data-step="-15">− ۱۵ دقیقه</button>
+      </div>
+    </div>
+    <div class="chips">
+      <button class="chip" data-quick="480">۸ صبح</button>
+      <button class="chip" data-quick="840">۲ ظهر</button>
+      <button class="chip" data-quick="1260">۹ شب</button>
+    </div>
+    <div style="margin-top:28px"><button class="btn" id="savePill">ذخیره</button></div>
+    <div style="text-align:center;margin-top:8px"><button class="link danger" id="deletePill">پاک کردن این قرص</button></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+/* ---------- Persian helpers ---------- */
+const fa = (x) => String(x).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
+const dayPart = (h) => (h >= 4 && h < 12) ? "صبح" : (h >= 12 && h < 15) ? "ظهر" : (h >= 15 && h < 19) ? "عصر" : "شب";
+function timeLabel(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  let h12 = h % 12; if (h12 === 0) h12 = 12;
+  return fa(h12 + (m ? ":" + String(m).padStart(2, "0") : "") + " " + dayPart(h));
+}
+const clock = (h, m) => fa(String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0"));
+const WEEK = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه", "جمعه", "شنبه"];
+const dayKey = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const nowMin = (d) => d.getHours() * 60 + d.getMinutes();
+const $ = (s) => document.querySelector(s);
+
+/* ---------- Saved data (stays on this phone only) ---------- */
+const KEY = "pill-reminder.v1";
+let data = { title: "", pills: [], taken: {}, keepAwake: false };
+try { Object.assign(data, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) {}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+}
+const sortPills = () => data.pills.sort((a, b) => a.min - b.min);
+const isTaken = (id, d) => !!data.taken[id + "@" + dayKey(d)];
+function markTaken(id, d) {
+  data.taken[id + "@" + dayKey(d)] = 1;
+  const cutoff = dayKey(new Date(d.getTime() - 30 * 864e5));
+  for (const k of Object.keys(data.taken)) if (k.split("@")[1] < cutoff) delete data.taken[k];
+  save();
+}
+
+/* ---------- Voices: stored in the browser's database ---------- */
+const db = new Promise((res, rej) => {
+  const r = indexedDB.open("pill-reminder", 1);
+  r.onupgradeneeded = () => r.result.createObjectStore("voices");
+  r.onsuccess = () => res(r.result);
+  r.onerror = () => rej(r.error);
+});
+async function voiceGet(k) {
+  const d = await db;
+  return new Promise((res) => { const q = d.transaction("voices").objectStore("voices").get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); });
+}
+async function voiceSet(k, blob) {
+  const d = await db;
+  return new Promise((res) => { const t = d.transaction("voices", "readwrite"); blob ? t.objectStore("voices").put(blob, k) : t.objectStore("voices").delete(k); t.oncomplete = res; t.onerror = res; });
+}
+
+/* ---------- Sound ---------- */
+let ctx = null;
+const buffers = {};
+let playing = null;
+async function loadVoice(k) {
+  buffers[k] = null;
+  const blob = await voiceGet(k);
+  if (!blob || !ctx) return;
+  try { buffers[k] = await ctx.decodeAudioData(await blob.arrayBuffer()); } catch (e) { buffers[k] = null; }
+}
+function stopSound() { if (playing) { try { playing.stop(); } catch (e) {} playing = null; } }
+function chime() {
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  [0, 0.45, 0.9].forEach((o, i) => {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.frequency.value = [880, 660, 880][i];
+    g.gain.setValueAtTime(0.0001, t + o); g.gain.exponentialRampToValueAtTime(0.5, t + o + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + o + 0.4);
+    osc.connect(g).connect(ctx.destination); osc.start(t + o); osc.stop(t + o + 0.42);
+  });
+}
+function play(k) {
+  stopSound();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume();
+  const b = buffers[k];
+  if (!b) { if (k === "due") chime(); return; }
+  const src = ctx.createBufferSource();
+  src.buffer = b; src.connect(ctx.destination); src.start();
+  playing = src;
+}
+
+/* ---------- Screens ---------- */
+function go(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("on", s.id === id));
+  window.scrollTo(0, 0);
+  if (id === "home") renderHome();
+  if (id === "settings") renderSettings();
+}
+document.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => go(b.dataset.go));
+let toastTimer;
+function toast(text, color) {
+  const t = $("#toast"); t.textContent = text; t.style.background = color || "var(--taken)";
+  t.classList.add("on"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 3500);
+}
+
+function renderHome() {
+  const n = new Date();
+  const hi = data.title ? "سلام " + data.title : "سلام";
+  $("#hello").textContent = hi; $("#startHello").textContent = hi;
+  $("#today").textContent = "امروز " + WEEK[n.getDay()] + " · ساعت " + clock(n.getHours(), n.getMinutes());
+  const list = $("#list"); list.innerHTML = "";
+  if (!data.pills.length) {
+    list.innerHTML = '<p style="font-size:26px;font-weight:700">هنوز قرصی ثبت نشده است.</p>';
+    const b = document.createElement("button"); b.className = "btn"; b.textContent = "ثبت قرص‌ها";
+    b.onclick = () => go("settings"); list.appendChild(b);
+    $("#hold").style.display = "none";
+    return;
+  }
+  $("#hold").style.display = "";
+  for (const p of data.pills) {
+    const taken = isTaken(p.id, n), due = !taken && nowMin(n) >= p.min, canMark = !taken && nowMin(n) >= p.min - 60;
+    const c = document.createElement("div");
+    c.className = "card" + (taken ? " taken" : due ? " due" : "");
+    const color = taken ? "var(--taken)" : due ? "var(--due)" : "var(--muted)";
+    const status = taken ? "✓ خورده شد" : due ? "وقتش است — هنوز نخورده‌اید" : "هنوز وقتش نشده";
+    c.innerHTML = '<div class="top"><div class="name"></div><div class="time"></div></div><div class="status"></div>';
+    c.querySelector(".name").textContent = p.name;
+    c.querySelector(".time").textContent = timeLabel(p.min);
+    const st = c.querySelector(".status"); st.textContent = status; st.style.color = color;
+    if (canMark) {
+      const b = document.createElement("button"); b.className = "btn " + (due ? "green" : "");
+      b.textContent = "✓ خوردم"; b.onclick = () => taken_(p, n); c.appendChild(b);
+    } else if (taken) {
+      const b = document.createElement("button"); b.className = "link"; b.textContent = "اشتباه زدم";
+      b.onclick = () => { delete data.taken[p.id + "@" + dayKey(n)]; save(); renderHome(); };
+      c.appendChild(b);
+    }
+    list.appendChild(c);
+  }
+}
+
+/* Long press to open settings, so the parent does not open it by accident. */
+(function () {
+  const h = $("#hold"); let t;
+  const start = (e) => { e.preventDefault(); t = setTimeout(() => go("settings"), 1200); };
+  const end = () => clearTimeout(t);
+  h.addEventListener("pointerdown", start); h.addEventListener("pointerup", end);
+  h.addEventListener("pointerleave", end); h.addEventListener("pointercancel", end);
+  h.addEventListener("contextmenu", (e) => e.preventDefault());
+})();
+
+/* ---------- Reminder ---------- */
+let alarmPill = null, alarmDay = null, repeatTimer = null;
+const snoozed = {}, shown = {};
+function openAlarm(p, day) {
+  alarmPill = p; alarmDay = day;
+  shown[p.id + "@" + dayKey(day)] = Date.now();
+  $("#alarmWho").textContent = data.title;
+  $("#alarmName").textContent = p.name;
+  $("#alarmTime").textContent = "ساعت " + timeLabel(p.min);
+  $("#alarm").classList.add("on");
+  play("due");
+  clearInterval(repeatTimer);
+  repeatTimer = setInterval(() => play("due"), 2 * 60 * 1000); // repeat every 2 minutes
+  notify(p);
+}
+function closeAlarm() { clearInterval(repeatTimer); $("#alarm").classList.remove("on"); alarmPill = null; }
+function taken_(p, day) {
+  markTaken(p.id, day);
+  closeAlarm();
+  play("done");
+  toast("آفرین! ثبت شد ✓");
+  renderHome();
+}
+$("#alarmTaken").onclick = () => alarmPill && taken_(alarmPill, alarmDay);
+$("#alarmReplay").onclick = () => play("due");
+$("#alarmLater").onclick = () => {
+  if (!alarmPill) return;
+  snoozed[alarmPill.id] = Date.now() + 10 * 60 * 1000;
+  stopSound(); closeAlarm();
+  toast("۱۰ دقیقهٔ دیگر دوباره یادآوری می‌کنم", "var(--primary)");
+};
+function check() {
+  if (alarmPill || $("#start").classList.contains("on")) return;
+  const n = new Date(), today = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  for (const p of data.pills) {
+    const late = nowMin(n) - p.min;
+    if (late < 0 || late > 180 || isTaken(p.id, today)) continue;
+    if ((snoozed[p.id] || 0) > Date.now()) continue;
+    const last = shown[p.id + "@" + dayKey(today)];
+    // Opened once and closed without an answer: ask again after 10 minutes.
+    if (last && Date.now() - last < 10 * 60 * 1000) continue;
+    openAlarm(p, today);
+    return;
+  }
+}
+function notify(p) {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted" || !document.hidden) return;
+    navigator.serviceWorker && navigator.serviceWorker.ready.then((r) =>
+      r.showNotification("موقع خوردن قرص است", { body: p.name + " — " + timeLabel(p.min), tag: "pill-" + p.id, requireInteraction: true }));
+  } catch (e) {}
+}
+
+/* ---------- Settings ---------- */
+const titleInput = $("#title");
+titleInput.oninput = () => { data.title = titleInput.value.trim(); save(); };
+document.querySelectorAll("[data-title]").forEach((b) => b.onclick = () => {
+  titleInput.value = b.dataset.title; data.title = b.dataset.title; save();
+});
+function renderSettings() {
+  titleInput.value = data.title;
+  $("#keepAwake").checked = !!data.keepAwake;
+  const a = $("#pillAdmin"); a.innerHTML = "";
+  for (const p of data.pills) {
+    const c = document.createElement("button");
+    c.className = "card"; c.style.cssText = "width:100%;text-align:right;display:block;font-family:inherit;color:inherit";
+    c.innerHTML = '<div class="top"><div class="name" style="font-size:26px"></div><div class="small muted">✎ تغییر</div></div><div class="small"></div>';
+    c.querySelector(".name").textContent = p.name;
+    c.querySelectorAll(".small")[1].textContent = timeLabel(p.min);
+    c.onclick = () => openEdit(p);
+    a.appendChild(c);
+  }
+  document.querySelectorAll("[data-voice]").forEach(renderVoice);
+}
+
+/* Voice recorder panel */
+const recState = {};
+async function renderVoice(panel) {
+  const k = panel.dataset.voice;
+  const hint = panel.querySelector(".muted");
+  panel.innerHTML = ""; panel.appendChild(hint);
+  const st = recState[k];
+  if (st && st.recorder) {
+    const t = document.createElement("div"); t.className = "rec";
+    t.textContent = "در حال ضبط… " + fa(st.left) + " ثانیه"; panel.appendChild(t); st.label = t;
+    const b = document.createElement("button"); b.className = "btn red"; b.textContent = "■ پایان ضبط";
+    b.onclick = () => st.recorder.stop(); panel.appendChild(b);
+    return;
+  }
+  const has = !!(await voiceGet(k));
+  if (has) {
+    const ok = document.createElement("div"); ok.className = "ok"; ok.textContent = "✓ صدا ضبط شده است"; panel.appendChild(ok);
+    const row = document.createElement("div"); row.className = "row";
+    const pl = document.createElement("button"); pl.className = "btn outline"; pl.textContent = "▶ پخش";
+    pl.onclick = async () => { await ensureAudio(); await loadVoice(k); play(k); };
+    const del = document.createElement("button"); del.className = "btn outline"; del.textContent = "حذف";
+    del.onclick = async () => { await voiceSet(k, null); buffers[k] = null; renderVoice(panel); };
+    row.append(pl, del); panel.appendChild(row);
+  }
+  const rec = document.createElement("button"); rec.className = "btn";
+  rec.textContent = has ? "🎤 ضبط دوباره" : "🎤 ضبط صدا";
+  rec.onclick = () => startRecording(k, panel);
+  panel.appendChild(rec);
+}
+async function startRecording(k, panel) {
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { toast("اجازهٔ میکروفون داده نشد", "var(--danger)"); return; }
+  stopSound();
+  const chunks = [];
+  const recorder = new MediaRecorder(stream);
+  const st = recState[k] = { recorder, left: 30 };
+  recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  recorder.onstop = async () => {
+    clearInterval(st.timer);
+    stream.getTracks().forEach((t) => t.stop());
+    delete recState[k];
+    const blob = new Blob(chunks, { type: recorder.mimeType || "audio/mp4" });
+    await voiceSet(k, blob);
+    await ensureAudio(); await loadVoice(k);
+    renderVoice(panel);
+  };
+  st.timer = setInterval(() => {
+    st.left--; if (st.label) st.label.textContent = "در حال ضبط… " + fa(st.left) + " ثانیه";
+    if (st.left <= 0) recorder.stop();
+  }, 1000);
+  recorder.start();
+  renderVoice(panel);
+}
+
+/* Add / edit pill */
+let editing = null, editMin = 480;
+function showTime() {
+  $("#pillTime").textContent = timeLabel(editMin);
+  $("#pillClock").textContent = clock(Math.floor(editMin / 60), editMin % 60);
+}
+function openEdit(p) {
+  editing = p || null;
+  $("#editTitle").textContent = p ? "تغییر قرص" : "قرص تازه";
+  $("#pillName").value = p ? p.name : "";
+  editMin = p ? p.min : 480;
+  $("#deletePill").style.display = p ? "" : "none";
+  showTime(); go("edit");
+}
+$("#addPill").onclick = () => openEdit(null);
+document.querySelectorAll("[data-step]").forEach((b) => b.onclick = () => {
+  editMin = ((editMin + Number(b.dataset.step)) % 1440 + 1440) % 1440; showTime();
+});
+document.querySelectorAll("[data-quick]").forEach((b) => b.onclick = () => { editMin = Number(b.dataset.quick); showTime(); });
+$("#savePill").onclick = () => {
+  const name = $("#pillName").value.trim();
+  if (!name) { toast("لطفاً اسم قرص را بنویسید", "var(--danger)"); return; }
+  if (editing) { editing.name = name; editing.min = editMin; }
+  else data.pills.push({ id: Date.now(), name, min: editMin });
+  sortPills(); save(); go("settings");
+};
+$("#deletePill").onclick = () => {
+  if (!editing || !confirm("قرص «" + editing.name + "» پاک شود؟")) return;
+  data.pills = data.pills.filter((x) => x !== editing); save(); go("settings");
+};
+
+/* Keep the screen on */
+let wakeLock = null;
+async function applyWake() {
+  try {
+    if (data.keepAwake && "wakeLock" in navigator && document.visibilityState === "visible" && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    } else if (!data.keepAwake && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) { wakeLock = null; }
+}
+$("#keepAwake").onchange = (e) => { data.keepAwake = e.target.checked; save(); applyWake(); };
+$("#testAlarm").onclick = () => {
+  if (!data.pills.length) { toast("اول یک قرص اضافه کنید", "var(--danger)"); return; }
+  openAlarm(data.pills[0], new Date());
+};
+
+/* ---------- Start ---------- */
+async function ensureAudio() {
+  if (!ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC();
+  }
+  if (ctx.state === "suspended") await ctx.resume();
+}
+$("#startBtn").onclick = async () => {
+  await ensureAudio();
+  // A silent blip unlocks sound on iPhone for the rest of the visit.
+  const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start();
+  await Promise.all([loadVoice("due"), loadVoice("done")]);
+  $("#start").classList.remove("on");
+  try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
+  applyWake(); renderHome(); check();
+};
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") { if (ctx && ctx.state === "suspended") ctx.resume(); applyWake(); renderHome(); check(); }
+});
+setInterval(() => { if ($("#home").classList.contains("on")) renderHome(); check(); }, 15000);
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+sortPills(); renderHome();
+</script>
+</body>
+</html>
