@@ -17,6 +17,7 @@ right reference, preparing the next step and keeping a clear record of the resul
 2. **[Bizkonic Command-Desk](https://github.com/alirezarajabi-dev/command-desk)** — Command lookup, network references and SMTP guides. [Open app](https://alirezarajabi-dev.github.io/command-desk/)
 3. **[Bizkonic Tools](https://github.com/alirezarajabi-dev/bk-tools)** — Six browser tools for everyday developer and freelance tasks. [Open app](https://alirezarajabi-dev.github.io/bk-tools/)
 4. **[Bizkonic Forms](https://github.com/alirezarajabi-dev/field-report)** — A guided way to record a service visit and prepare a clear report. [Open app](https://alirezarajabi-dev.github.io/field-report/)
+5. **[Aloud · روزنگار](projects/aloud/)** — A private, bilingual voice journal: speak your day and it becomes a page in your notebook. [Open app](https://aloud.alirezarajabi.com/)
 
 ---
 
