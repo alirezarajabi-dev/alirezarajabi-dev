@@ -20,6 +20,7 @@ the useful work, explains what it did with real numbers, and never touches perso
 - **BOOST MY PC** — one click cleans junk, runs SSD TRIM, refreshes the network cache and re-checks health,
   then shows a before-and-after report (free space, memory in use, health score)
 - **Health score and tips** — free space, memory, uptime, pending updates, startup load and battery wear
+- **All your drives** — C:, D:, USB sticks, external SSDs and network drives with free space bars; a USB is detected the moment it's plugged in and can be ejected safely
 - **Cleaner** — temporary files, browser cache (passwords and logins stay), thumbnail and shader caches,
   error reports, old Windows Update downloads; each with its size before you clean
 - **Startup apps** — on/off switches with the RAM each app is using; apps that are safe to turn off are marked
@@ -28,7 +29,7 @@ the useful work, explains what it did with real numbers, and never touches perso
 - **USB format** — makes a USB stick FAT32 + MBR for copiers, printers, cars and TVs
 - **Health check** — Defender, Firewall, BitLocker, Recovery Environment, system backup, SSD health,
   TRIM, battery health and last update, plus Windows' own DISM and SFC repair
-- **Big files** — finds the largest files in your folders; it never deletes them
+- **Big files** — finds the largest files in your folders or on any drive (D:, USB…); it never deletes them
 - **About page** — reached from the menu or by clicking the animated AR logo
 - **Undo changes and history** — every setting it changes can be put back; everything it does is logged
 - **Pause and Stop** for every long task, light and dark modes, eight color themes from the AR palette
