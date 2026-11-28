@@ -18,6 +18,7 @@ right reference, preparing the next step and keeping a clear record of the resul
 3. **[Bizkonic Tools](https://github.com/alirezarajabi-dev/bk-tools)** — Six browser tools for everyday developer and freelance tasks. [Open app](https://alirezarajabi-dev.github.io/bk-tools/)
 4. **[Bizkonic Forms](https://github.com/alirezarajabi-dev/field-report)** — A guided way to record a service visit and prepare a clear report. [Open app](https://alirezarajabi-dev.github.io/field-report/)
 5. **[Aloud · روزنگار](projects/aloud/)** — A private, bilingual voice journal: speak your day and it becomes a page in your notebook. [Open app](https://aloud.alirezarajabi.com/)
+6. **[PC Helper](projects/pc-helper/)** — A friendly Windows app that checks, cleans and speeds up a PC in one click, safely and reversibly. [Download for Windows](projects/pc-helper/download/PC-Helper-by-Alireza-Setup.zip)
 
 ---
 
