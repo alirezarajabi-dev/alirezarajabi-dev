@@ -23,7 +23,7 @@ the useful work, explains what it did with real numbers, and never touches perso
 - **Cleaner** — temporary files, browser cache (passwords and logins stay), thumbnail and shader caches,
   error reports, old Windows Update downloads; each with its size before you clean
 - **Startup apps** — on/off switches with the RAM each app is using; apps that are safe to turn off are marked
-- **Memory and power** — the heaviest apps (closed politely, so they can offer to save), Power Mode,
+- **Memory and power** — the heaviest apps with honest advice for each (keep, safe to close, or turn off at startup), closed politely so they can offer to save, Power Mode,
   and a read-only view of virtual memory
 - **USB format** — makes a USB stick FAT32 + MBR for copiers, printers, cars and TVs
 - **Health check** — Defender, Firewall, BitLocker, Recovery Environment, system backup, SSD health,
